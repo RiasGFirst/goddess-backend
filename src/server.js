@@ -12,6 +12,7 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/cards', cardRoutes);
 app.use('/api/eras', eraRoutes);
+app.use('/api/players', playerRoutes);
 
 sequelize.sync().then(() => {
   console.log('Database synchronized');
