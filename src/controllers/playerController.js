@@ -1,8 +1,9 @@
 const Player = require('../models/Player');
+const bcrypt = require('bcryptjs');
 
 const getAllPlayers = async (req, res) => {
   try {
-    const players = await Player.find();
+    const players = await Player.findAll();
     res.json(players);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -12,7 +13,7 @@ const getAllPlayers = async (req, res) => {
 
 const getPlayerById = async (req, res) => {
     try {
-        const player = await Player.findById(req.params.id);
+        const player = await Player.findByPk(req.params.id);
         if (!player) {
             return res.status(404).json({ message: 'Player not found' });
         }
@@ -22,10 +23,20 @@ const getPlayerById = async (req, res) => {
     }
 };
 
-const createPlayer = async (req, res) => {
-    const player = new Player(req.body);
+const createPlayer = async (req, res) => {   
+    const { id, username, password, email, discord } = req.body;
     try {
-        const newPlayer = await player.save();
+        // Hash password
+        const hashPassword = await bcrypt.hash(password, 15);
+
+        const player = new Player({
+            id,
+            username,
+            password: hashPassword,
+            email,
+            discord
+        })
+        const newPlayer = player.save();
         res.status(201).json(newPlayer);
     } catch (err) {
         res.status(400).json({ message: err.message });

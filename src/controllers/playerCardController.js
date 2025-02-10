@@ -2,9 +2,9 @@ const PlayerCard = require('../models/PlayerCard');
 
 
 const getPlayerCards = async (req, res) => {
-  const { player_id } = req.params;
+  const { id } = req.params;
   try {
-    const playerCards = await PlayerCard.findAll({ where: { player_id } });
+    const playerCards = await PlayerCard.findAll({ where: { player_id: id } });
     res.status(200).json(playerCards);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -28,7 +28,7 @@ const addCardToPlayer = async (req, res) => {
   }
 };
 
-p
+
 const removeCardFromPlayer = async (req, res) => {
   const { player_id, card_id, quantity } = req.body;
   try {
