@@ -4,6 +4,11 @@ const Player = require('./Player');
 const Card = require('./Card');
 
 const PlayerCard = sequelize.define('PlayerCard', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   player_id: {
     type: DataTypes.STRING,
     references: {
@@ -18,14 +23,13 @@ const PlayerCard = sequelize.define('PlayerCard', {
       key: 'id',
     },
   },
+  quantity: {
+    type: DataTypes.INTEGER,
+    defaultValue: 1,
+    allowNull: false,
+  },
 }, {
-  tableName: 'Player_Card',
-  indexes: [
-    {
-      unique: true,
-      fields: ['player_id', 'card_id'],
-    },
-  ],
+  tableName: 'Player_Card', // Spécifie explicitement le nom de la table
 });
 
 module.exports = PlayerCard;

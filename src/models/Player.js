@@ -28,8 +28,9 @@ const Player = sequelize.define('Player', {
 });
 
 Player.associate = function(models) {
-    Player.belongsToMany(models.Card, { through: 'PlayerCard', foreignKey: 'player_id' });
+  Player.belongsToMany(models.Card, { through: models.PlayerCard, foreignKey: 'player_id' });
 };
+
   
 
 module.exports = Player;
