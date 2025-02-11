@@ -1,4 +1,8 @@
 const Card = require('../models/Card');
+const { uploadFile, deleteFile } = require('../services/minioServices');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
+
 
 const getAllCards = async (req, res) => {
     try {
@@ -23,8 +27,25 @@ const getCardById = async (req, res) => {
 };
 
 const createCard = async (req, res) => {
+    const cardData = req.body;
+    const file = req.file;
+  
+    if (!file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const cardId = cardData.id; // Extract the ID from the request body
+
+    if (!cardId) {
+        return res.status(400).json({ message: 'Card ID is required' });
+    }
+
     try {
-        const card = await Card.create(req.body);
+        // Use the card ID as the file name
+        const imageUrl = await uploadFile(file.buffer, `${cardId}.png`);
+
+        // Create the card with the provided ID and image URL
+        const card = await Card.create({ ...cardData, image_url: imageUrl });
         res.status(201).json(card);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -49,15 +70,29 @@ const updateCard = async (req, res) => {
 
 const deleteCard = async (req, res) => {
     try {
-        const deleted = await Card.destroy({
-            where: { id: req.params.id }
-        });
-        if (deleted) {
-            res.status(204).send("Card deleted");
+        // Find the card by ID
+        const card = await Card.findByPk(req.params.id);
+  
+        if (!card) {
+            return res.status(404).json({ error: 'Card not found' });
+        }
+  
+        // Extract the image URL and parse the file name
+        const imageUrl = card.image_url;
+        const fileName = imageUrl.split('/').pop(); // Extract the file name from the URL
+  
+        // Delete the image from MinIO
+        await deleteFile(fileName);
+  
+        // Delete the card from the database
+        const deleted = await Card.destroy({ where: { id: req.params.id } });
+        if (deleted == 1) {
+            res.status(200).json({ message: 'Card deleted' });
         } else {
             res.status(404).json({ error: 'Card not found' });
         }
     } catch (err) {
+        console.error('Error deleting card or image:', err);
         res.status(500).json({ error: err.message });
     }
 };
