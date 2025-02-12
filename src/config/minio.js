@@ -7,6 +7,7 @@ const minioClient = new Minio.Client({
     useSSL: process.env.MINIO_SSL === 'true',
     accessKey: process.env.MINIO_ACCESS, // Remplacez par votre clé d'accès
     secretKey: process.env.MINIO_SECRET, // Remplacez par votre clé secrète
+    region: process.env.MINIO_REGION
 });
 
 module.exports = minioClient;

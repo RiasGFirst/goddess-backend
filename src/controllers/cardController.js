@@ -1,5 +1,6 @@
 const Card = require('../models/Card');
-const { uploadFile, deleteFile } = require('../services/minioServices');
+const { uploadFile, deleteFile } = require('../services/minioService');
+const { getOrCreatePresignedUrl } = require('../services/redisService')
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -7,7 +8,18 @@ const upload = multer({ storage: multer.memoryStorage() });
 const getAllCards = async (req, res) => {
     try {
       const cards = await Card.findAll();
-      res.json(cards);
+      
+      const cardsPresignedURL = await Promise.all(
+        cards.map(async (card) => {
+            const cacheKey = `presigned_url_${card.id}`;
+            const objectName = card.image_url.split('/').pop();
+            const presignedURL = getOrCreatePresignedUrl(objectName, cacheKey)
+            return { ...card.toJSON(), image_url: presignedURL };
+        })
+      )
+
+      res.json(cardsPresignedURL)
+
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -17,7 +29,15 @@ const getCardById = async (req, res) => {
     try {
         const card = await Card.findByPk(req.params.id);
         if (card) {
-            res.json(card);
+            const cacheKey = `presigned_url_${card.id}`;
+            const objectName = card.image_url.split('/').pop();
+            const presignedURL = await  getOrCreatePresignedUrl(objectName, cacheKey)
+            console.log("============");
+            console.log(presignedURL);
+            
+
+            res.json({ ...card.toJSON(), image_url: presignedURL })
+
         } else {
             res.status(404).json({ error: 'Card not found' });
         }
@@ -25,6 +45,26 @@ const getCardById = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const createCard = async (req, res) => {
     const cardData = req.body;
